@@ -1,18 +1,18 @@
 <p align="center">
-<img src=https://github.com/PhilippThoelke/goofi-pipe/assets/36135990/60fb2ba9-4124-4ca4-96e2-ae450d55596d width="150">
+<img src=https://github.com/dav0dea/goofi-pipe/assets/36135990/60fb2ba9-4124-4ca4-96e2-ae450d55596d width="150">
 </p>
 
 <h1 align="center">goofi-pipe</h1>
 <h3 align="center">Generative Organic Oscillation Feedback Isomorphism Pipeline</h3>
 
 <p align="center">
-  <a href="https://github.com/PhilippThoelke/goofi-pipe/actions/workflows/pytest.yml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/PhilippThoelke/goofi-pipe/pytest.yml"></a>
+  <a href="https://github.com/dav0dea/goofi-pipe/actions/workflows/pytest.yml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/dav0dea/goofi-pipe/pytest.yml"></a>
   <a href="https://pypi.org/project/goofi/"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/goofi"></a>
-  <a href="https://github.com/PhilippThoelke/goofi-pipe/blob/main/LICENSE"><img alt="GitHub License" src="https://img.shields.io/github/license/PhilippThoelke/goofi-pipe"></a>
+  <a href="https://github.com/dav0dea/goofi-pipe/blob/main/LICENSE"><img alt="GitHub License" src="https://img.shields.io/github/license/dav0dea/goofi-pipe"></a>
   <a href="https://pypi.org/project/goofi/"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/goofi"></a>
 </p>
 
-<h3 align="center"><a href="https://notebooklm.google.com/notebook/b28ee248-db68-4b41-b914-1fc8312f86a8/audio?pli=1">AI Podcast about goofi-pipe</a></h3>
+<h3 align="center"><a href="https://notebooklm.google.com/notebook/b28ee248-db68-4b41-b914-1fc8312f86a8/audio?pli=1">AI Podcast about goofi-pipe</a> | <a href="https://deepwiki.com/dav0dea/goofi-pipe">AI-generated Documentation</a></h3>
 
 # Installation
 If you only want to run goofi-pipe and not edit any of the code, make sure you activated the desired Python environment with Python>=3.9 and run the following commands in your terminal:
@@ -31,7 +31,7 @@ goofi-pipe # start the application
 ## Development
 Follow these steps if you want to adapt the code of existing nodes, or create custom new nodes. In your terminal, make sure you activated the desired Python environment with Python>=3.9, and that you are in the directory where you want to install goofi-pipe. Then, run the following commands:
 ```bash
-git clone git@github.com:PhilippThoelke/goofi-pipe.git # download the repository
+git clone git@github.com:dav0dea/goofi-pipe.git # download the repository
 cd goofi-pipe # navigate into the repository
 pip install -e . # install goofi-pipe in development mode
 goofi-pipe # start the application to make sure the installation was successful
@@ -42,7 +42,7 @@ goofi-pipe # start the application to make sure the installation was successful
 ## Accessing the Node Menu
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/358a897f-3947-495e-849a-e6d7ebce2238" width="small">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/358a897f-3947-495e-849a-e6d7ebce2238" width="small">
 </p>
 
 To access the node menu, simply double-click anywhere within the application window or press the 'Tab' key. The node menu allows you to add various functionalities to your pipeline. Nodes are categorized for easy access, but if you're looking for something specific, the search bar at the top is a handy tool.
@@ -50,7 +50,7 @@ To access the node menu, simply double-click anywhere within the application win
 ## Common Parameters and Metadata
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/23ba6df7-7f28-4505-acff-205e42e48dcb" alt="Common Parameters" width="small">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/23ba6df7-7f28-4505-acff-205e42e48dcb" alt="Common Parameters" width="small">
 </p>
 
 **Common Parameters**: All nodes within goofi have a set of common parameters. These settings consistently dictate how the node operates within the pipeline.
@@ -61,7 +61,7 @@ the node is triggered when it receives input.
 - **Max_Frequency**: This denotes the maximum rate at which computations are set for the node.
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/54604cfb-6611-4ce8-92b2-0b353584c5f5" alt="Metadata" width="small">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/54604cfb-6611-4ce8-92b2-0b353584c5f5" alt="Metadata" width="small">
 </p>
 
 **Metadata**: This section conveys essential information passed between nodes. Each output node will be accompanied by its metadata, providing clarity and consistency throughout the workflow.
@@ -78,7 +78,7 @@ Here are some conventional components present in the metadata
 ## Playing with Pre-recorded EEG Signal using LslStream
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/db340bd9-07af-470e-a791-f3c2dcf4935e" width="small">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/db340bd9-07af-470e-a791-f3c2dcf4935e" width="small">
 </p>
 
 This image showcases the process of utilizing a pre-recorded EEG signal through the `LslStream` node. It's crucial to ensure that the `Stream Name` in the `LslStream` node matches the stream name in the node receiving the data. This ensures data integrity and accurate signal processing in real-time.
@@ -88,7 +88,7 @@ This image showcases the process of utilizing a pre-recorded EEG signal through 
 ## Basic Signal Processing Patch
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/52f85dd4-6395-4eb2-a347-6cf489d659da" width="medium">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/52f85dd4-6395-4eb2-a347-6cf489d659da" width="medium">
 </p>
 
 This patch provides a demonstration of basic EEG signal processing using goofi-pipe.
@@ -108,7 +108,7 @@ One of the user-friendly features of goofi-pipe is the capability to toggle betw
 ## Sending Power Bands via Open Sound Control (OSC)
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/97576017-a737-47b9-aac6-bd0d00e0e7e9" width="medium">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/97576017-a737-47b9-aac6-bd0d00e0e7e9" width="medium">
 </p>
 
 Expanding on the basic patch, the advanced additions include:
@@ -123,7 +123,7 @@ These nodes elevate data processing and communication capabilities.
 ## Real-Time Connectivity and Spectrogram
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/7c63a869-d20a-4f41-99fe-eb0931cebdc9" width="medium">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/7c63a869-d20a-4f41-99fe-eb0931cebdc9" width="medium">
 </p>
 
 This patch highlights:
@@ -133,7 +133,7 @@ This patch highlights:
 - **Spectrogram**: Created using the `PSD` node followed by a `Buffer`, it provides a time-resolved view of the EEG signal's frequency content.
 
 ## Principal Component Analysis (PCA)
-![PCA](https://github.com/PhilippThoelke/goofi-pipe/assets/36135990/d239eed8-4552-4256-9caf-d7c2fbb937e9)
+![PCA](https://github.com/dav0dea/goofi-pipe/assets/36135990/d239eed8-4552-4256-9caf-d7c2fbb937e9)
 
 Using PCA (Principal Component Analysis) allows us to reduce the dimensionality of raw EEG data, while retaining most of the variance. We use the first three components and visualize their trajectory, allowing us to identify patterns in the data over time. The topographical maps show the contrbution of each channel to the first four principal components (PCs).
 
@@ -142,18 +142,18 @@ Using PCA (Principal Component Analysis) allows us to reduce the dimensionality 
 leverage the multimodal framework of goofi, state-of-the-art machine learning classifiers can be built on-the-fly to predict behavior from an array of different sources. Here's a brief walkthrough of three distinct examples:
 
 ### 1. EEG Signal Classification
-![EEG Signal Classification](https://github.com/PhilippThoelke/goofi-pipe/assets/36135990/2da6b555-9f79-40c7-9bd8-1f863dcf4137)
+![EEG Signal Classification](https://github.com/dav0dea/goofi-pipe/assets/36135990/2da6b555-9f79-40c7-9bd8-1f863dcf4137)
 This patch captures raw EEG signals using the `EEGrecording` and `LslStream`module. The classifier module allows
 to capture data from different states indicated by the user from *n* features, which in the present case are the 64 EEG channels. Some classifiers allow for visualization of feature importance. Here we show a topomap of the distribution of features importances on the scalp. The classifier outputs probability of being in each of the states in the training data. This prediction is smoothed using a buffer for less jiterry results.  
-![Classifier parameters](https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/da2a86e3-efc8-4088-8d52-fb8c528dfb87)
+![Classifier parameters](https://github.com/dav0dea/goofi-pipe/assets/49297774/da2a86e3-efc8-4088-8d52-fb8c528dfb87)
 
 ### 2. Audio Input Classification
-![Audio Input Classification](https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/4e50b13e-185d-414e-a39d-f6d39dc3e57f)
+![Audio Input Classification](https://github.com/dav0dea/goofi-pipe/assets/49297774/4e50b13e-185d-414e-a39d-f6d39dc3e57f)
 The audio input stream captures real-time sound data, which can also be passed through a classifier. Different sonic states can be predicted in realtime.
 
 ### 3. Video Input Classification
-![Video Input Classification](https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/e7988ae9-cd2c-4b9f-907a-f438fd52328b)
-![image_classification2](https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/77d33f2e-014f-4e3b-99fb-179f4bca1db0)
+![Video Input Classification](https://github.com/dav0dea/goofi-pipe/assets/49297774/e7988ae9-cd2c-4b9f-907a-f438fd52328b)
+![image_classification2](https://github.com/dav0dea/goofi-pipe/assets/49297774/77d33f2e-014f-4e3b-99fb-179f4bca1db0)
 In this example, video frames are extracted using the `VideoStream` module. Similarly, prediction of labelled visual states can be achieved in realtime.
 The images show how two states (being on the left or the right side of the image) can be detected using classification
 
@@ -162,7 +162,7 @@ These patches demonstrate the versatility of our framework in handling various t
 ## Musical Features using Biotuner
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/b426ce44-bf23-4b88-a772-5d183dc36a93" width="medium">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/b426ce44-bf23-4b88-a772-5d183dc36a93" width="medium">
 </p>
 
 This patch presents a pipeline for processing EEG data to extract musical features:
@@ -172,7 +172,7 @@ This patch presents a pipeline for processing EEG data to extract musical featur
 - **Biotuner** Node: With its sophisticated algorithms, Biotuner pinpoints harmonic relationships, tension, peaks, and more, essential for music theory analysis.
 
 <p align="center">
-<img src="https://github.com/PhilippThoelke/goofi-pipe/assets/49297774/042692ae-a558-48f2-9693-d09e33240373" width="medium">
+<img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/042692ae-a558-48f2-9693-d09e33240373" width="medium">
 </p>
 
 Delving into the parameters of the Biotuner node:
