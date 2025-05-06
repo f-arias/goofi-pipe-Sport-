@@ -14,19 +14,24 @@ class Sine(Node):
             "common": {"autotrigger": True},
         }
 
+    def config_input_slots():
+        return {"frequency": DataType.ARRAY}
+
     def config_output_slots():
         return {"out": DataType.ARRAY}
 
     def setup(self):
         self.last_trigger = time.time()
 
-    def process(self):
+    def process(self, frequency):
+        freq = frequency.data.item() if frequency else self.params.sine.frequency.value
+
         meta = {"sfreq": self.params.sine.sampling_frequency.value}
 
         t = time.time()
         dt = t - self.last_trigger
         xs = np.arange(t, t + dt, 1 / self.params.sine.sampling_frequency.value)
-        data = np.sin(xs * np.pi * 2 * self.params.sine.frequency.value)
+        data = np.sin(xs * np.pi * 2 * freq)
 
         self.last_trigger = t
         return {"out": (data, meta)}

@@ -7,7 +7,7 @@ import serial.tools.list_ports
 
 from goofi.data import DataType
 from goofi.node import Node
-from goofi.params import IntParam
+from goofi.params import IntParam,StringParam
 
 
 class SerialStream(Node):
@@ -17,7 +17,7 @@ class SerialStream(Node):
     ESC_ESC = b"\xDD"
 
     def config_params():
-        return {"serial": {"sfreq": IntParam(512, 128, 1000), "port": ""}, "common": {"autotrigger": True}}
+        return {"serial": {"sfreq": IntParam(512, 128, 1000), "port": "","protocol":StringParam("ECG", options=["ECG","capacitive"])}, "common": {"autotrigger": True}}
 
     def config_output_slots():
         return {"out": DataType.ARRAY}
@@ -38,52 +38,93 @@ class SerialStream(Node):
         self.last_sample = None
 
     def process(self) -> Dict[str, Tuple[np.ndarray, Dict[str, Any]]]:
-        data_buf, time_buf = [], []
+        if self.params.serial.protocol.value == "ECG":
+            data_buf, time_buf = [], []
 
-        packet = bytearray()
-        start = time.time()
-        while time.time() - start < 1 / self.params.common.max_frequency.value:
-            c = self.ser.read()
-            if c == self.END:
-                # ignore empty packets
-                if packet and len(packet) == 2:
-                    value = packet[0] << 8 | packet[1]
-                    current_time = time.time()
-                    data_buf.append(value)
-                    time_buf.append(current_time)
-                packet = bytearray()
-            elif c == self.ESC:
+            packet = bytearray()
+            start = time.time()
+            while time.time() - start < 1 / self.params.common.max_frequency.value:
                 c = self.ser.read()
-                if c == self.ESC_END:
-                    packet.append(0xC0)
-                elif c == self.ESC_ESC:
-                    packet.append(0xDB)
-                else:
-                    print("Invalid escape sequence")
-            elif len(c) > 0:
-                packet.append(c[0])
+                if c == self.END:
+                    # ignore empty packets
+                    if packet and len(packet) == 2:
+                        value = packet[0] << 8 | packet[1]
+                        current_time = time.time()
+                        data_buf.append(value)
+                        time_buf.append(current_time)
+                    packet = bytearray()
+                elif c == self.ESC:
+                    c = self.ser.read()
+                    if c == self.ESC_END:
+                        packet.append(0xC0)
+                    elif c == self.ESC_ESC:
+                        packet.append(0xDB)
+                    else:
+                        print("Invalid escape sequence")
+                elif len(c) > 0:
+                    packet.append(c[0])
 
-        if len(data_buf) == 0:
-            # no data received
-            return None
+            if len(data_buf) == 0:
+                # no data received
+                return None
 
-        if self.last_time is None:
-            # first time, just store the data
+            if self.last_time is None:
+                # first time, just store the data
+                self.last_time = time_buf[-1]
+                self.last_sample = data_buf[-1]
+                return None
+
+            # resample the data
+            dt = 1 / self.params.serial.sfreq.value
+            xs = np.arange(time_buf[0], time_buf[-1], dt)
+            # TODO: make sure the time array is correct and we don't have discontinuities
+            data = np.interp(xs, time_buf, data_buf, left=self.last_sample)
+
             self.last_time = time_buf[-1]
-            self.last_sample = data_buf[-1]
-            return None
+            self.last_sample = data[-1]
 
-        # resample the data
-        dt = 1 / self.params.serial.sfreq.value
-        xs = np.arange(time_buf[0], time_buf[-1], dt)
-        # TODO: make sure the time array is correct and we don't have discontinuities
-        data = np.interp(xs, time_buf, data_buf, left=self.last_sample)
+            meta = {"sfreq": self.params.serial.sfreq.value}
+            return {"out": (data, meta)}
+        elif self.params.serial.protocol.value == "capacitive":
+            data_buf, time_buf = [], []
+            start = time.time()
+            while time.time() - start < 1 / self.params.common.max_frequency.value:
+                c = self.ser.readline().decode("utf-8").strip()
+                chans = list(map(int, c.split(",")))
+                data_buf.append(chans)
+                time_buf.append(time.time())
 
-        self.last_time = time_buf[-1]
-        self.last_sample = data[-1]
+            if len(data_buf) == 0:
+                # no data received
+                return None
+            
+            if self.last_time is None:
+                # first time, just store the data
+                self.last_time = time_buf[-1]
+                self.last_sample = data_buf[-1]
+                return None
+            
+            if len(data_buf) == 1:
+                data_buf = [self.last_sample] + data_buf
+                time_buf = [self.last_time] + time_buf
 
-        meta = {"sfreq": self.params.serial.sfreq.value}
-        return {"out": (data, meta)}
+            data_buf = np.array(data_buf)
+            time_buf = np.array(time_buf)
+            print(data_buf.shape, time_buf.shape)
+
+            dt = 1 / self.params.serial.sfreq.value
+            xs = np.arange(time_buf[0], time_buf[-1], dt)
+            
+            data = np.zeros((len(xs), data_buf.shape[1]))
+            for i in range(data_buf.shape[1]):
+                data[:, i] = np.interp(xs, time_buf, data_buf[:, i], left=self.last_sample[i])
+
+            self.last_time = time_buf[-1]
+            self.last_sample = data[-1]
+
+            meta = {"sfreq": self.params.serial.sfreq.value}
+            return {"out": (data.T, meta)}
+
 
     def detect_serial_port(self, names=["Arduino", "Serial"]):
         # detect the serial port

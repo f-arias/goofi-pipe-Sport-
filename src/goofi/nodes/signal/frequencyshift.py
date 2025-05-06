@@ -1,57 +1,65 @@
 import numpy as np
-
-from goofi.data import Data, DataType
+from goofi.data import DataType
 from goofi.node import Node
 from goofi.params import FloatParam
 
-
 class FrequencyShift(Node):
+    @staticmethod
     def config_input_slots():
         return {"data": DataType.ARRAY}
 
+    @staticmethod
     def config_output_slots():
         return {"out": DataType.ARRAY}
 
+    @staticmethod
     def config_params():
         return {
             "shift": {
-                "frequency_shift": FloatParam(1.0, -1000.0, 1000.0, doc="Frequency shift in Hz"),
+                "frequency_shift": FloatParam(
+                    1.0, -1000.0, 1000.0, doc="Frequency shift in Hz"
+                ),
             }
         }
 
-    def setup(self):
-        from scipy.signal import istft, stft
-
-        self.istft = istft
-        self.stft = stft
-
-    def process(self, data: Data):
+    def process(self, data):
+        # early exit
         if data is None or data.data is None:
             return None
 
-        signal = np.array(data.data).flatten()  # Assuming the input is 1D for simplicity
-        sfreq = data.meta["sfreq"]
+        # flatten to 1D
+        signal = np.asarray(data.data).flatten()
+        sfreq = data.meta.get("sfreq")
+        if sfreq is None:
+            raise ValueError("data.meta must include sampling frequency 'sfreq'.")
 
-        # Perform STFT
-        f, t, Zxx = self.stft(signal, fs=sfreq, nperseg=1024)
+        n = signal.shape[0]
+        freq_shift = self.params["shift"]["frequency_shift"].value
 
-        # Frequency shifting
-        frequency_shift = self.params["shift"]["frequency_shift"].value
-        delta_bin = -int(frequency_shift * len(f) / sfreq)  # Negate delta_bin computation
-        target_bins = np.arange(len(f)) + delta_bin
+        # compute how many FFT bins to shift
+        delta_bins = int(round(freq_shift * n / sfreq))
 
-        # Handling bins that go out of bounds after the shift
-        valid_bins = (target_bins >= 0) & (target_bins < len(f))
-        Zxx_shifted = np.zeros_like(Zxx)
+        # perform FFT
+        spectrum = np.fft.fft(signal)
 
-        # Phase correction and bin shifting
-        phase_shift = (2 * np.pi * delta_bin * np.arange(Zxx.shape[1]) / (Zxx.shape[1])) % (2 * np.pi)
-        Zxx_shifted[valid_bins] = Zxx[target_bins[valid_bins]] * np.exp(1j * phase_shift)
+        # allocate shifted spectrum
+        shifted_spectrum = np.zeros_like(spectrum)
 
-        # Inverse STFT to retrieve shifted signal
-        _, shifted_signal = self.istft(Zxx_shifted, fs=sfreq)
+        # positive shift => move content upward
+        if delta_bins > 0:
+            shifted_spectrum[delta_bins:] = spectrum[:-delta_bins]
+        # negative shift => move content downward
+        elif delta_bins < 0:
+            shifted_spectrum[:delta_bins] = spectrum[-delta_bins:]
+        else:
+            shifted_spectrum[:] = spectrum
 
-        # Depending on the exact length and shifts, you might want to match the output size to the input size
-        shifted_signal = shifted_signal[: len(signal)]
+        # invert back to time domain
+        shifted_signal = np.fft.ifft(shifted_spectrum)
+        # because spectrum shift breaks conjugate symmetry, take real part
+        shifted_signal = np.real(shifted_signal)
+
+        # trim/pad to original length (just in case)
+        shifted_signal = shifted_signal[:n]
 
         return {"out": (shifted_signal, data.meta)}
