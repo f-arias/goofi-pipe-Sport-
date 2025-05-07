@@ -1,6 +1,7 @@
 import functools
 import importlib
 import inspect
+import os
 import pkgutil
 import time
 import traceback
@@ -46,6 +47,10 @@ def list_nodes(verbose: bool = False) -> List[Type]:
 
         # iterate over all modules in the parent module
         for info in pkgutil.walk_packages(parent_module.__path__):
+            if "goofi" + os.sep + "nodes" not in info.module_finder.path:
+                # skip modules that are not in the goofi.nodes package
+                continue
+
             # import the module and measure the time it takes
             start = time.time()
             try:
