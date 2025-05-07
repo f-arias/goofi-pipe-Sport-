@@ -16,6 +16,10 @@ from goofi.message import Message, MessageType
 from goofi.params import NodeParams
 
 
+class NodeLoadingError(Exception):
+    """Custom exception for node loading errors."""
+
+
 @functools.lru_cache(maxsize=1)
 def list_nodes(verbose: bool = False) -> List[Type]:
     """
@@ -44,7 +48,17 @@ def list_nodes(verbose: bool = False) -> List[Type]:
         for info in pkgutil.walk_packages(parent_module.__path__):
             # import the module and measure the time it takes
             start = time.time()
-            module = importlib.import_module(f"{parent_module.__name__}.{info.name}")
+            try:
+                module = importlib.import_module(f"{parent_module.__name__}.{info.name}")
+            except ModuleNotFoundError as e:
+                print()
+                raise NodeLoadingError(
+                    f"Missing dependency for node '{info.name}' -> {e}; make sure to install the required dependencies."
+                ) from e
+            except Exception as e:
+                print()
+                raise NodeLoadingError(f"Failed to load node '{info.name}' -> {e}") from e
+
             module_annot = "" if time.time() - start < 0.2 else "!!!"
 
             if verbose:
