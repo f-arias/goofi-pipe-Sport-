@@ -1,6 +1,7 @@
 import functools
 import importlib
 import inspect
+import os
 import pkgutil
 import time
 import traceback
@@ -14,6 +15,10 @@ from goofi.connection import Connection
 from goofi.data import Data, DataType
 from goofi.message import Message, MessageType
 from goofi.params import NodeParams
+
+
+class NodeLoadingError(Exception):
+    """Custom exception for node loading errors."""
 
 
 @functools.lru_cache(maxsize=1)
@@ -42,9 +47,23 @@ def list_nodes(verbose: bool = False) -> List[Type]:
 
         # iterate over all modules in the parent module
         for info in pkgutil.walk_packages(parent_module.__path__):
+            if "goofi" + os.sep + "nodes" not in info.module_finder.path:
+                # skip modules that are not in the goofi.nodes package
+                continue
+
             # import the module and measure the time it takes
             start = time.time()
-            module = importlib.import_module(f"{parent_module.__name__}.{info.name}")
+            try:
+                module = importlib.import_module(f"{parent_module.__name__}.{info.name}")
+            except ModuleNotFoundError as e:
+                print()
+                raise NodeLoadingError(
+                    f"Missing dependency for node '{info.name}' -> {e}; make sure to install the required dependencies."
+                ) from e
+            except Exception as e:
+                print()
+                raise NodeLoadingError(f"Failed to load node '{info.name}' -> {e}") from e
+
             module_annot = "" if time.time() - start < 0.2 else "!!!"
 
             if verbose:

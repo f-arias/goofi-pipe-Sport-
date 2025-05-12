@@ -72,7 +72,7 @@ class Data:
         if isinstance(self.dtype, DataType) and self.dtype not in DTYPE_TO_TYPE:
             raise RuntimeError(
                 f"Data type {self.dtype} is defined but not handled in check_data. "
-                "Please report this bug at https://github.com/PhilippThoelke/goofi-pipe/issues."
+                "Please report this bug at https://github.com/dav0dea/goofi-pipe/issues."
             )
         if not isinstance(self.data, DTYPE_TO_TYPE[self.dtype]):
             raise ValueError(f"Expected data of type {DTYPE_TO_TYPE[self.dtype]}, got {type(self.data)}.")

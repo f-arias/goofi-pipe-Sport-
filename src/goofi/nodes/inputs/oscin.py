@@ -35,7 +35,7 @@ class OSCIn(Node):
         if len(args) > 1:
             raise ValueError(
                 "For now the OSCIn node only support a single argument per message. "
-                "Please open an issue if you need more (https://github.com/PhilippThoelke/goofi-pipe/issues)."
+                "Please open an issue if you need more (https://github.com/dav0dea/goofi-pipe/issues)."
             )
 
         val = args[0]
