@@ -488,6 +488,16 @@ Nodes that perform analysis on the data.
     - principal_components: ARRAY
   </details>
 
+<details><summary>&emsp;PhiID</summary>
+
+  - **Inputs:**
+    - matrix: ARRAY
+  - **Outputs:**
+    - PhiID: ARRAY
+    - inf_dyn: ARRAY
+    - IIT: ARRAY
+  </details>
+
 <details><summary>&emsp;PoseEstimation</summary>
 
   - **Inputs:**
@@ -873,6 +883,7 @@ Nodes that provide data to the pipeline.
 <details><summary>&emsp;Sine</summary>
 
   - **Inputs:**
+    - frequency: ARRAY
   - **Outputs:**
     - out: ARRAY
   </details>
@@ -1139,6 +1150,8 @@ Nodes that send data to external systems.
 
   - **Inputs:**
     - table_input: TABLE
+    - start: ARRAY
+    - stop: ARRAY
   - **Outputs:**
   </details>
 
@@ -1311,6 +1324,14 @@ Nodes implementing signal processing operations.
     - data: ARRAY
   - **Outputs:**
     - normalized: ARRAY
+  </details>
+
+<details><summary>&emsp;TableNormalization</summary>
+
+  - **Inputs:**
+    - table: TABLE
+  - **Outputs:**
+    - normalized: TABLE
   </details>
 
 <details><summary>&emsp;Threshold</summary>
