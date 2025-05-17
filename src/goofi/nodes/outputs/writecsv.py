@@ -13,7 +13,8 @@ class WriteCsv(Node):
         # This node will accept a table as its input.
         return {"table_input": DataType.TABLE,
                 "start": DataType.ARRAY,
-                "stop": DataType.ARRAY,}
+                "stop": DataType.ARRAY,
+                'fname': DataType.STRING}
 
     @staticmethod
     def config_params():
@@ -38,12 +39,16 @@ class WriteCsv(Node):
         self.last_values = {}  # Store the last known value for each column
         self.is_writing = False
 
-    def process(self, table_input: Data, start: Data, stop: Data):
+    def process(self, table_input: Data, start: Data, stop: Data, fname: Data):
         if start is not None and (start.data > 0).any() or self.params["Write"]["start"].value:
             self.is_writing = True
             self.start_time = time.time()
+            if fname is not None:
+                filename = fname.data
+            else:
+                # Use the filename from parameters if no custom filename is provided
+                filename = self.params["Write"]["filename"].value
             # Generate a new filename each time writing starts
-            filename = self.params["Write"]["filename"].value
             basename, ext = os.path.splitext(filename)
             datetime_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
             self.last_filename = f"{basename}_{datetime_str}{ext}"
