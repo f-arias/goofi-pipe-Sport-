@@ -50,6 +50,9 @@ def list_nodes(verbose: bool = False) -> List[Type]:
             if "goofi" + os.sep + "nodes" not in info.module_finder.path:
                 # skip modules that are not in the goofi.nodes package
                 continue
+            if info.name.startswith("_"):
+                # skip modules that start with an underscore
+                continue
 
             # import the module and measure the time it takes
             start = time.time()
