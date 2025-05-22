@@ -3,7 +3,7 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 
-from goofi.data import DataType
+from goofi.data import DataType, Data
 from goofi.node import Node
 from goofi.params import BoolParam
 
@@ -18,6 +18,9 @@ class LSLClient(Node):
             },
             "common": {"autotrigger": True},
         }
+
+    def config_input_slots():
+        return {"source_name": DataType.STRING, "stream_name": DataType.STRING}
 
     def config_output_slots():
         return {"out": DataType.ARRAY}
@@ -37,10 +40,17 @@ class LSLClient(Node):
         self.available_streams = None
         self.lsl_stream_refresh_changed(True)
 
-        self.connect()
-
-    def process(self) -> Dict[str, Tuple[np.ndarray, Dict[str, Any]]]:
+    def process(self, source_name: Data, stream_name: Data) -> Dict[str, Tuple[np.ndarray, Dict[str, Any]]]:
         """Fetch the next chunk of data from the client."""
+        if source_name is not None:
+            self.params.lsl_stream.source_name.value = source_name.data
+            self.lsl_stream_stream_name_changed(source_name.data)
+            self.input_slots["source_name"].clear()
+        if stream_name is not None:
+            self.params.lsl_stream.stream_name.value = stream_name.data
+            self.lsl_stream_source_name_changed(stream_name.data)
+            self.input_slots["stream_name"].clear()
+
         if self.available_streams is None:
             self.lsl_stream_refresh_changed(True)
 
@@ -99,6 +109,8 @@ class LSLClient(Node):
                 elif (s, n) not in matches:
                     # otherwise, prefer the first match
                     matches[(s, n)] = info
+
+        print(self.available_streams, source_name, stream_name)
 
         if len(matches) == 0:
             raise RuntimeError(f'Could not find stream "{stream_name}" from source "{source_name}".')
