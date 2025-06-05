@@ -75,13 +75,13 @@ Here are some conventional components present in the metadata
 - **Shape of the Output**: Details the format and structure of the node's output.
 
 
-## Playing with Pre-recorded EEG Signal using LslStream
+## Playing with Pre-recorded EEG Signal using LSLClient
 
 <p align="center">
 <img src="https://github.com/dav0dea/goofi-pipe/assets/49297774/db340bd9-07af-470e-a791-f3c2dcf4935e" width="small">
 </p>
 
-This image showcases the process of utilizing a pre-recorded EEG signal through the `LslStream` node. It's crucial to ensure that the `Stream Name` in the `LslStream` node matches the stream name in the node receiving the data. This ensures data integrity and accurate signal processing in real-time.
+This image showcases the process of utilizing a pre-recorded EEG signal through the `LSLClient` node. It's crucial to ensure that the `Stream Name` in the `LSLClient` node matches the stream name in the node receiving the data. This ensures data integrity and accurate signal processing in real-time.
 
 # Patch examples
 
@@ -93,9 +93,9 @@ This image showcases the process of utilizing a pre-recorded EEG signal through 
 
 This patch provides a demonstration of basic EEG signal processing using goofi-pipe.
 
-1. **EegRecording**: This is the starting point where the EEG data originates. 
+1. **EEGRecording**: This is the starting point where the EEG data originates.
 
-2. **LslClient**: The `LslClient` node retrieves the EEG data from `EegRecording`. Here, the visual representation of the EEG data being streamed in real-time is depicted. By default, the multiple lines in the plot correspond to the different EEG channels.
+2. **LSLClient**: The `LSLClient` node retrieves the EEG data from `EEGRecording`. Here, the visual representation of the EEG data being streamed in real-time is depicted. By default, the multiple lines in the plot correspond to the different EEG channels.
 
 3. **Buffer**: This node holds the buffered EEG data.
 
@@ -135,16 +135,15 @@ This patch highlights:
 ## Principal Component Analysis (PCA)
 ![PCA](https://github.com/dav0dea/goofi-pipe/assets/36135990/d239eed8-4552-4256-9caf-d7c2fbb937e9)
 
-Using PCA (Principal Component Analysis) allows us to reduce the dimensionality of raw EEG data, while retaining most of the variance. We use the first three components and visualize their trajectory, allowing us to identify patterns in the data over time. The topographical maps show the contrbution of each channel to the first four principal components (PCs).
+Using PCA (Principal Component Analysis) allows us to reduce the dimensionality of raw EEG data, while retaining most of the variance. We use the first three components and visualize their trajectory, allowing us to identify patterns in the data over time. The topographical maps show the contribution of each channel to the first four principal components (PCs).
 
 ## Realtime Classification
 
-leverage the multimodal framework of goofi, state-of-the-art machine learning classifiers can be built on-the-fly to predict behavior from an array of different sources. Here's a brief walkthrough of three distinct examples:
+Leveraging the multimodal framework of goofi, state-of-the-art machine learning classifiers can be built on-the-fly to predict behavior from an array of different sources. Here's a brief walkthrough of three distinct examples:
 
 ### 1. EEG Signal Classification
 ![EEG Signal Classification](https://github.com/dav0dea/goofi-pipe/assets/36135990/2da6b555-9f79-40c7-9bd8-1f863dcf4137)
-This patch captures raw EEG signals using the `EEGrecording` and `LslStream`module. The classifier module allows
-to capture data from different states indicated by the user from *n* features, which in the present case are the 64 EEG channels. Some classifiers allow for visualization of feature importance. Here we show a topomap of the distribution of features importances on the scalp. The classifier outputs probability of being in each of the states in the training data. This prediction is smoothed using a buffer for less jiterry results.  
+This patch captures raw EEG signals using the `EEGRecording` and `LSLClient` modules. The classifier captures data from different states indicated by the user from *n* features, which in the present case are the 64 EEG channels. Some classifiers allow for visualization of feature importance. Here we show a topomap of the distribution of feature importances on the scalp. The classifier outputs probability of being in each of the states in the training data. This prediction is smoothed using a buffer for less jittery results.
 ![Classifier parameters](https://github.com/dav0dea/goofi-pipe/assets/49297774/da2a86e3-efc8-4088-8d52-fb8c528dfb87)
 
 ### 2. Audio Input Classification
@@ -561,6 +560,14 @@ Nodes that perform analysis on the data.
     - transcript: STRING
   </details>
 
+<details><summary>&emsp;TotoEmbedding</summary>
+
+  - **Inputs:**
+    - timeseries: ARRAY
+  - **Outputs:**
+    - embedding: ARRAY
+  </details>
+
 <details><summary>&emsp;TransitionalHarmony</summary>
 
   - **Inputs:**
@@ -811,6 +818,8 @@ Nodes that provide data to the pipeline.
 <details><summary>&emsp;LSLClient</summary>
 
   - **Inputs:**
+    - source_name: STRING
+    - stream_name: STRING
   - **Outputs:**
     - out: ARRAY
   </details>
@@ -1152,6 +1161,7 @@ Nodes that send data to external systems.
     - table_input: TABLE
     - start: ARRAY
     - stop: ARRAY
+    - fname: STRING
   - **Outputs:**
   </details>
 
