@@ -6,6 +6,7 @@ from os import path
 from threading import Thread
 from typing import Any, Dict, Optional
 
+import numpy as np
 import yaml
 
 from goofi.connection import Connection
@@ -238,6 +239,14 @@ class Manager:
 
         # create all nodes
         for name, node in manager_yaml["nodes"].items():
+            # In rare cases node positions can be corrupted, which shows up as a position of (min int32, min int32).
+            # This causes the dearpygui to segfault when trying to create a link to the node. Workaround this by
+            # resetting the position to (0, 0) if it is corrupted.
+            xpos, ypos = node["gui_kwargs"]["pos"]
+            if xpos == np.iinfo(np.int32).min or ypos == np.iinfo(np.int32).min:
+                print(f"WARNING: Node '{name}' has a corrupted position ({xpos}, {ypos}). Resetting to (0, 0).")
+                node["gui_kwargs"]["pos"] = (0, 0)
+
             # add the node to the manager
             self.add_node(node["_type"], node["category"], name=name, params=node["params"], **node["gui_kwargs"])
 
