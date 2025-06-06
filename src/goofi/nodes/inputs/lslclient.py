@@ -110,8 +110,6 @@ class LSLClient(Node):
                     # otherwise, prefer the first match
                     matches[(s, n)] = info
 
-        print(self.available_streams, source_name, stream_name)
-
         if len(matches) == 0:
             raise RuntimeError(f'Could not find stream "{stream_name}" from source "{source_name}".')
         elif len(matches) > 1:
