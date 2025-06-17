@@ -6,6 +6,7 @@
 <h3 align="center">Generative Organic Oscillation Feedback Isomorphism Pipeline</h3>
 
 <p align="center">
+  <a href="https://deepwiki.com/dav0dea/goofi-pipe"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
   <a href="https://github.com/dav0dea/goofi-pipe/actions/workflows/pytest.yml"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/dav0dea/goofi-pipe/pytest.yml"></a>
   <a href="https://pypi.org/project/goofi/"><img alt="PyPI - Version" src="https://img.shields.io/pypi/v/goofi"></a>
   <a href="https://github.com/dav0dea/goofi-pipe/blob/main/LICENSE"><img alt="GitHub License" src="https://img.shields.io/github/license/dav0dea/goofi-pipe"></a>
