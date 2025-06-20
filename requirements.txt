@@ -20,6 +20,7 @@ networkx
 deeptime
 geopy
 edgeofpy
+powerlaw # dependency of edgeofpy (TODO: remove once edgeofpy is updated)
 mido
 pyyaml
 pyaca
@@ -31,3 +32,10 @@ usearch
 gdown
 neurodsp
 safetensors
+einops
+neurokit2
+pywavelets # dependency of neurokit2 (remove once neurokit2 is updated; https://github.com/neuropsychology/NeuroKit/pull/1097)
+py-feat
+torch
+transformers
+accelerate

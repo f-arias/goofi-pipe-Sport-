@@ -22,6 +22,8 @@ pip install goofi # install goofi-pipe
 goofi-pipe # start the application
 ```
 
+If you want to use PyTorch-based nodes and require a specific version of CUDA, refer to the [PyTorch installation guide](https://pytorch.org/get-started/locally/) to install the correct version of PyTorch.
+
 > [!NOTE]
 > On some platforms (specifically Linux and Mac) it might be necessary to install the `liblsl` package for some of goofi-pipe's features (everything related to LSL streams).
 > Follow the instructions provided [here](https://github.com/sccn/liblsl?tab=readme-ov-file#getting-and-using-liblsl), or simply install it via
