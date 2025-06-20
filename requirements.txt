@@ -35,7 +35,7 @@ safetensors
 einops
 neurokit2
 pywavelets # dependency of neurokit2 (remove once neurokit2 is updated; https://github.com/neuropsychology/NeuroKit/pull/1097)
-py-feat
 torch
 transformers
 accelerate
+# py-feat # conflicts with other dependencies... required for the FacialExpression node
