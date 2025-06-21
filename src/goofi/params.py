@@ -274,7 +274,7 @@ class NodeParams:
                     if isinstance(param, dict):
                         # !!! LOADING PARAMS FROM DICT IS A LEGACY FEATURE TO LOAD OLD GOOFI PATCHES !!!
                         # reconstruct serialized param object
-                        param_type = TYPE_PARAM_MAP[type(param["_value"])]
+                        param_type = type(self._data[group][name])
                         self._data[group] = self._data[group]._replace(**{name: param_type(**param)})
                         continue
 
