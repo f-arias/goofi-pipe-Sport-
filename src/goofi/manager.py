@@ -3,6 +3,7 @@ import time
 from copy import deepcopy
 from multiprocessing import Manager as MPManager
 from os import path
+from pathlib import Path
 from threading import Thread
 from typing import Any, Dict, Optional
 
@@ -346,7 +347,9 @@ class Manager:
             Window().remove_node(name, **gui_kwargs)
 
     @mark_unsaved_changes
-    def add_link(self, node_out: str, node_in: str, slot_out: str, slot_in: str, notify_gui: bool = True, **gui_kwargs) -> None:
+    def add_link(
+        self, node_out: str, node_in: str, slot_out: str, slot_in: str, notify_gui: bool = True, **gui_kwargs
+    ) -> None:
         """
         Adds a link between two nodes.
 
@@ -543,7 +546,9 @@ class Manager:
         if len(serialized_nodes) != len(self.nodes):
             filepath = f"{filepath}.incomplete"
             # TODO: add proper logging
-            print(f"WARNING: Mismatch between serialized nodes and actual nodes, saving may be incomplete. Saving to '{filepath}'.")
+            print(
+                f"WARNING: Mismatch between serialized nodes and actual nodes, saving may be incomplete. Saving to '{filepath}'."
+            )
 
         # convert the manager instance into yaml format
         manager_yaml = yaml.dump({"nodes": serialized_nodes, "links": links})
@@ -614,12 +619,30 @@ def main(duration: float = 0, args=None):
     parser.add_argument("--no-multiprocessing", action="store_true", help="disable multiprocessing")
     parser.add_argument("--comm", choices=comm_choices, default="mp", help="node communication backend")
     parser.add_argument("--build-docs", action="store_true", help="update the node list in the README")
+    parser.add_argument("--example", nargs="?", const="", help="run example files instead of starting the manager")
     args = parser.parse_args(args)
 
     if args.build_docs:
         # just update the docs and exit
         docs()
         return
+
+    if args.example is not None:
+        if len(args.example) == 0:
+            # list example files and exit
+            example_dir = Path(__file__).parents[2] / "examples"
+            example_files = sorted(example_dir.glob("*.gfi"))
+            if not example_files:
+                print("No example files found.")
+                return
+            print("Available example files:")
+            for example in example_files:
+                print(f" - {example.name}")
+            print("Use `--example <filename>` to run an example file.")
+            return
+        else:
+            assert args.filepath is None, "Please specify either a direct filepath or an example, not both."
+            args.filepath = str(Path(__file__).parents[2] / "examples" / args.example)
 
     # create and run the manager (this blocks until the manager is terminated)
     Manager(
