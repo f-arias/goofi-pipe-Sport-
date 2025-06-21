@@ -13,7 +13,7 @@ class Param(ABC):
 
     _value: Any = None
 
-    # NOTE: The doc attribute is added to the subclasses using monkey-patching. The kw_only=True argument
+    # NOTE: The `doc` attribute is added to the subclasses via monkey-patching. The kw_only=True argument
     # is not supported in Python<3.10, so we have to use this hacky solution.
     # doc: str = field(default=None, kw_only=True)
 
@@ -98,8 +98,8 @@ class StringParam(Param):
         return ""
 
 
-# NOTE: Monkey-patching the 'doc' attribute into the Param subclasses is a hacky solution to include
-# the keyword-only `doc` argument in the __init__ method of the subclasses. Python>=3.10 can use the
+# NOTE: Monkey-patching the `doc` attribute into the Param subclasses is a hacky solution to include
+# keyword-only arguments in the __init__ method of the subclasses. Python>=3.10 can use the
 # kw_only=True argument in the field decorator.
 
 
@@ -112,26 +112,34 @@ def adjusted_init(original_init):
     return new_init
 
 
-# monkey-patch the 'doc' attribute into the classes
-def add_doc_attribute(cls):
+# monkey-patch additional keyword-only attributes into the classes
+def add_extra_attributes(cls):
+    # doc attribute
     setattr(cls, "doc", None)
-    new_field = field(default=None)
-    cls.__dataclass_fields__["doc"] = new_field
+    cls.__dataclass_fields__["doc"] = field(default=None)
 
-    # Adjust the __init__ method
+    # adjust the __init__ method
     cls.__init__ = adjusted_init(cls.__init__)
 
 
 # apply the monkey-patching
-add_doc_attribute(Param)
+add_extra_attributes(Param)
 for subclass in Param.__subclasses__():
-    add_doc_attribute(subclass)
+    add_extra_attributes(subclass)
 
 
 DEFAULT_PARAMS = {
     "common": {
-        "autotrigger": BoolParam(False),
-        "max_frequency": FloatParam(30.0, 0.0, 60.0),
+        "autotrigger": BoolParam(
+            False,
+            doc=(
+                "If set, the node will run its processing function automatically "
+                "at the specified Max Frequency, even if none of the inputs have changed."
+            ),
+        ),
+        "max_frequency": FloatParam(
+            30.0, 0.0, 60.0, doc="The maximum frequency at which the node will run its processing function."
+        ),
     },
 }
 
