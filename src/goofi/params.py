@@ -280,10 +280,14 @@ class NodeParams:
 
                     # update only the value of the parameter, leave the rest unchanged
                     if not isinstance(self._data[group][name], TYPE_PARAM_MAP[type(param)]):
-                        raise TypeError(
-                            f"Expected parameter type {TYPE_PARAM_MAP[type(param)].__name__} but got "
-                            f"{type(self._data[group][name]).__name__}."
-                        )
+                        # it's okay if we wanted a float but got int
+                        if isinstance(self._data[group][name], FloatParam) and isinstance(param, int):
+                            param = float(param)
+                        else:
+                            raise TypeError(
+                                f"Expected parameter type {TYPE_PARAM_MAP[type(param)].__name__} but got "
+                                f"{type(self._data[group][name]).__name__}."
+                            )
                     self._data[group][name]._value = param
                 else:
                     # update the entire parameter object
