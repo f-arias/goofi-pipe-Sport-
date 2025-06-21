@@ -13,9 +13,10 @@ class Param(ABC):
 
     _value: Any = None
 
-    # NOTE: The `doc` attribute is added to the subclasses via monkey-patching. The kw_only=True argument
-    # is not supported in Python<3.10, so we have to use this hacky solution.
+    # NOTE: The `doc` and `save_param` attributes are added to the subclasses via monkey-patching.
+    # The kw_only=True argument is not supported in Python<3.10, so we have to use this hacky solution.
     # doc: str = field(default=None, kw_only=True)
+    # save_param: bool = field(default=True, kw_only=True)
 
     def __post_init__(self):
         if self._value is None:
@@ -98,8 +99,8 @@ class StringParam(Param):
         return ""
 
 
-# NOTE: Monkey-patching the `doc` attribute into the Param subclasses is a hacky solution to include
-# keyword-only arguments in the __init__ method of the subclasses. Python>=3.10 can use the
+# NOTE: Monkey-patching the `doc` and `save_param` attribute into the Param subclasses is a hacky solution
+# to include keyword-only arguments in the __init__ method of the subclasses. Python>=3.10 can use the
 # kw_only=True argument in the field decorator.
 
 
@@ -107,16 +108,20 @@ class StringParam(Param):
 def adjusted_init(original_init):
     def new_init(self, *args, **kwargs):
         self.doc = kwargs.pop("doc", None)
+        self.save_param = kwargs.pop("save_param", True)
         original_init(self, *args, **kwargs)
 
     return new_init
 
 
-# monkey-patch additional keyword-only attributes into the classes
+# monkey-patch the 'doc' attribute into the classes
 def add_extra_attributes(cls):
     # doc attribute
     setattr(cls, "doc", None)
     cls.__dataclass_fields__["doc"] = field(default=None)
+    # save_param attribute
+    setattr(cls, "save_param", True)
+    cls.__dataclass_fields__["save_param"] = field(default=True)
 
     # adjust the __init__ method
     cls.__init__ = adjusted_init(cls.__init__)
@@ -299,8 +304,9 @@ class NodeParams:
         for group, params in self._data.items():
             serialized_params = {}
             for name, param in params.items():
-                param = param._value
-                serialized_params[name] = param
+                if param.save_param:
+                    param = param._value
+                    serialized_params[name] = param
             serialized_data[group] = serialized_params
         return serialized_data
 
