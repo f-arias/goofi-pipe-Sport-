@@ -2,7 +2,7 @@ import numpy as np
 
 from goofi.data import Data, DataType
 from goofi.node import Node
-from goofi.params import IntParam, FloatParam
+from goofi.params import FloatParam, IntParam
 
 
 class TimeDelayEmbedding(Node):
@@ -14,8 +14,12 @@ class TimeDelayEmbedding(Node):
 
     def config_params():
         return {
-            "embedding": {"delay": IntParam(1, 1, 100), "embedding_dimension": IntParam(2, 2, 100), "moire_embedding": False,
-                          'exponent': FloatParam(1.0, 0.0, 10.0, doc="Exponent for time delay embedding")}
+            "embedding": {
+                "delay": IntParam(1, 1, 100),
+                "embedding_dimension": IntParam(2, 2, 100),
+                "moire_embedding": False,
+                "exponent": FloatParam(1.0, 0.0, 10.0, doc="Exponent for time delay embedding"),
+            }
         }
 
     def process(self, input_array: Data):
@@ -29,11 +33,16 @@ class TimeDelayEmbedding(Node):
         array = input_array.data
         arrays = [array]
         exponent = self.params["embedding"]["exponent"].value
+        max_shift = int((embedding_dimension - 1) ** exponent * delay)
+
         # Generating delayed versions
         for i in range(1, embedding_dimension):
-            shift = int((i ** exponent) * delay)
+            shift = int((i**exponent) * delay)
             delayed = np.roll(array, shift=shift, axis=0)
             arrays.append(delayed)
+
+        # prevent wrapping around
+        arrays = [arr[max_shift:] for arr in arrays]
 
         if moire_embedding:
             embedded_array = np.stack(arrays, axis=-1)
