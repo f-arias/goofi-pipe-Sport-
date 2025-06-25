@@ -1,5 +1,4 @@
-import os
-from os.path import join
+import tempfile
 
 import numpy as np
 
@@ -64,10 +63,9 @@ class Monolith(Node):
         return {"features": (features, meta)}
 
 
-from scipy.signal import butter, filtfilt, iirnotch, welch
-
-
 def preprocess(data: np.ndarray, sfreq: float):
+    from scipy.signal import butter, filtfilt, iirnotch
+
     # Apply bandpass filter (3-30 Hz)
     nyquist = sfreq / 2
     low_cut = 3 / nyquist
@@ -90,18 +88,6 @@ def preprocess(data: np.ndarray, sfreq: float):
     return data
 
 
-import tempfile
-
-import neurokit2 as nk2
-import numpy as np
-from antropy import detrended_fluctuation, higuchi_fd, lziv_complexity, petrosian_fd
-from fooof import FOOOF
-from phyid.calculate import calc_PhiID
-from pyspi.calculator import Calculator
-from scipy.stats import kurtosis, skew
-from toto.inference.embedding import embed as embed_toto
-
-
 def mean_amplitude(x, sfreq):
     return np.mean(x)
 
@@ -111,10 +97,14 @@ def std_amplitude(x, sfreq):
 
 
 def skewness(x, sfreq):
+    from scipy.stats import skew
+
     return skew(x)
 
 
 def kurt(x, sfreq):
+    from scipy.stats import kurtosis
+
     return kurtosis(x)
 
 
@@ -137,6 +127,8 @@ def hjorth_complexity(x, sfreq):
 
 
 def spectral(x, sfreq):
+    from scipy.signal import welch
+
     f, Pxx = welch(x, sfreq)
     mean_frequency = np.sum(f * Pxx) / np.sum(Pxx)
     delta = np.trapezoid(Pxx[(f >= 0) & (f <= 4)], f[(f >= 0) & (f <= 4)])
@@ -145,10 +137,36 @@ def spectral(x, sfreq):
     beta = np.trapezoid(Pxx[(f > 12) & (f <= 30)], f[(f > 12) & (f <= 30)])
     gamma = np.trapezoid(Pxx[(f > 30) & (f <= 45)], f[(f > 30) & (f <= 45)])
 
+    from fooof import FOOOF
+
     model = FOOOF(peak_width_limits=(2, 12))
     model.fit(f, Pxx, freq_range=(3, 30))
 
     return np.array([delta, theta, alpha, beta, gamma, mean_frequency] + list(model.aperiodic_params_))
+
+
+def compute_detrended_fluctuation(x, sfreq):
+    from antropy import detrended_fluctuation
+
+    return detrended_fluctuation(x)
+
+
+def compute_higuchi_fd(x, sfreq):
+    from antropy import higuchi_fd
+
+    return higuchi_fd(x)
+
+
+def compute_lziv_complexity(x, sfreq):
+    from antropy import lziv_complexity
+
+    return lziv_complexity(x > x.mean(), normalize=True)
+
+
+def compute_petrosian_fd(x, sfreq):
+    from antropy import petrosian_fd
+
+    return petrosian_fd(x)
 
 
 def binarize_by_mean(x):
@@ -156,64 +174,94 @@ def binarize_by_mean(x):
 
 
 def entropy_shannon(x, sfreq):
+    import neurokit2 as nk2
+
     bin_ts = binarize_by_mean(x)
     return nk2.entropy_shannon(bin_ts, base=2)[0]
 
 
 def entropy_renyi(x, sfreq):
+    import neurokit2 as nk2
+
     bin_ts = binarize_by_mean(x)
     return nk2.entropy_renyi(bin_ts, alpha=2)[0]
 
 
 def entropy_approximate(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_approximate(x, delay=1, dimension=2, tolerance="sd", Corrected=True)[0]
 
 
 def entropy_sample(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_sample(x, delay=1, dimension=2, tolerance="sd")[0]
 
 
 def entropy_rate(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_rate(x, kmax=10, symbolize="mean")[0]
 
 
 def entropy_permutation(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_permutation(x, delay=1, dimension=2, corrected=True, weighted=False, conditional=False)[0]
 
 
 def entropy_permutation_weighted(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_permutation(x, delay=1, dimension=2, corrected=True, weighted=True, conditional=False)[0]
 
 
 def entropy_permutation_conditional(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_permutation(x, delay=1, dimension=2, corrected=True, weighted=False, conditional=True)[0]
 
 
 def entropy_permutation_weighted_conditional(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_permutation(x, delay=1, dimension=2, corrected=True, weighted=True, conditional=True)[0]
 
 
 def entropy_multiscale(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_multiscale(x, dimension=2, tolerance="sd", method="MSPEn")[0]
 
 
 def entropy_bubble(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_bubble(x, delay=1, dimension=2, alpha=2, tolerance="sd")[0]
 
 
 def entropy_svd(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_svd(x, delay=1, dimension=2)[0]
 
 
 def entropy_attention(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_attention(x)[0]
 
 
 def entropy_dispersion(x, sfreq):
+    import neurokit2 as nk2
+
     return nk2.entropy_dispersion(x, delay=1, dimension=2, c=6, symbolize="NCDF")[0]
 
 
 def compute_spi_features(data, subset="fast"):
+    from pyspi.calculator import Calculator
+
     # Create a temporary file with the config
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
         f.write(PYSPI_FAST_CONFIG)
@@ -231,6 +279,8 @@ def phiid_pairwise_metrics(x, sfreq):
     Compute all PhiID atom metrics for all pairs of channels (asymmetric, src->tgt and tgt->src).
     Returns a flattened array of all atom means for each channel pair and direction.
     """
+    from phyid.calculate import calc_PhiID
+
     data = np.atleast_2d(x)
     n_channels, n_time = data.shape
     tau = 5
@@ -268,11 +318,17 @@ def phiid_pairwise_metrics(x, sfreq):
     return np.array(results, dtype=np.float32).flatten()
 
 
+def compute_toto_embedding(x, sfreq):
+    from toto.inference.embedding import embed as embed_toto
+
+    return embed_toto(x, global_average=True)
+
+
 FEAT_FNS = {
-    "detrended_fluctuation": lambda x, sfreq: detrended_fluctuation(x),
-    "higuchi_fd": lambda x, sfreq: higuchi_fd(x),
-    "lziv_complexity": lambda x, sfreq: lziv_complexity(x > x.mean(), normalize=True),
-    "petrosian_fd": lambda x, sfreq: petrosian_fd(x),
+    "detrended_fluctuation": compute_detrended_fluctuation,
+    "higuchi_fd": compute_higuchi_fd,
+    "lziv_complexity": compute_lziv_complexity,
+    "petrosian_fd": compute_petrosian_fd,
     "mean_amplitude": mean_amplitude,
     "std_amplitude": std_amplitude,
     "skewness": skewness,
@@ -298,7 +354,7 @@ FEAT_FNS = {
     "entropy_dispersion": entropy_dispersion,
     "spi": compute_spi_features,
     "phiid": phiid_pairwise_metrics,
-    "toto": lambda x, sfreq: embed_toto(x, global_average=True),
+    "toto": compute_toto_embedding,
 }
 
 BATCHED_FEATS = ["toto"]
