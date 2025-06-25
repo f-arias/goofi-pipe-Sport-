@@ -96,18 +96,14 @@ class PhiID(Node):
         inf_dyn_vals = np.zeros((n_channels, len(information_dynamics_metrics)), dtype=np.float32)
         IIT_vals = np.zeros((n_channels, len(IIT_metrics)), dtype=np.float32)
         # Compute PhiID for each channel vs. the mean of all other channels
-        for i in range(n_channels):
-            src = data[i]
-            if n_channels > 1:
-                # target is average of all other channels
-                trg = np.mean(data[np.arange(n_channels) != i], axis=0)
-            else:
-                # only one channel: create trg as the timelagged version of src
-                trg = np.roll(src, tau)
-                # TODO
+        now = data[0]
+        for i in range(1, n_channels):
+            past = data[i]
+
+            # TODO: add option for pairwise calculation
 
             # Run the PhiID calculation
-            atoms_res, _ = self.calc_PhiID(src, trg, tau, kind=kind, redundancy=redundancy)
+            atoms_res, _ = self.calc_PhiID(past, now, tau, kind=kind, redundancy=redundancy)
             # add 'str', 'stx', 'sty', 'sts' together
 
             # Each atoms_res[name] is a vector length n_time - tau
@@ -138,11 +134,11 @@ class PhiID(Node):
         if matrix.meta and "channels" in matrix.meta and "dim0" in matrix.meta["channels"]:
             channel_labels = matrix.meta["channels"]["dim0"]
         else:
-            channel_labels = [f"ch{i}" for i in range(n_channels)]
+            channel_labels = [f"ch{i}" for i in range(n_channels - 1)]
         out_meta["channels"] = {"dim0": channel_labels, "dim1": atom_names}
         out_phi = {}
         out_phi["channels"] = {"dim0": channel_labels, "dim1": list(information_dynamics_metrics.keys())}
         out_IIT = {}
         out_IIT["channels"] = {"dim0": channel_labels, "dim1": list(IIT_metrics.keys())}
 
-        return {"PhiID": (PhiID_vals, out_meta), "inf_dyn": (inf_dyn_vals, out_phi), "IIT": (IIT_vals, out_IIT)}
+        return {"PhiID": (PhiID_vals[1:], out_meta), "inf_dyn": (inf_dyn_vals[1:], out_phi), "IIT": (IIT_vals[1:], out_IIT)}
