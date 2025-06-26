@@ -16,7 +16,12 @@ class Transpose(Node):
         if array is None or array.data is None:
             return None
 
+        if array.data.ndim == 1:
+            # If the input is a 1D array, add an extra dimension
+            array.data = array.data.reshape(-1, 1)
+
         if array.data.ndim != 2:
+            # TODO: support n-dimensional arrays
             raise ValueError("Data must be 2D (TODO: support n-dimensional arrays).")
 
         result = array.data.T

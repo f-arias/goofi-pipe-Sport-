@@ -38,4 +38,5 @@ pywavelets # dependency of neurokit2 (remove once neurokit2 is updated; https://
 torch
 transformers
 accelerate
+syndisc @ git+https://github.com/pmediano/syndisc.git
 # py-feat # conflicts with other dependencies... required for the FacialExpression node
