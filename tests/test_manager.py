@@ -14,7 +14,7 @@ MANAGER_TEST_DURATION = 0.1
 
 def create_simple_manager(comm_backend: str = "mp") -> Manager:
     """
-    Creates a simple manager with a constant node, a sine node, and an add node.
+    Creates a simple manager with a constant node, an oscillator node, and an add node.
 
     ### Parameters
     `comm_backend` : str
@@ -26,11 +26,11 @@ def create_simple_manager(comm_backend: str = "mp") -> Manager:
     """
     manager = Manager(duration=MANAGER_TEST_DURATION, communication_backend=comm_backend)
     manager.add_node("ConstantArray", "inputs")
-    manager.add_node("Sine", "inputs")
+    manager.add_node("Oscillator", "inputs")
     manager.add_node("Operation", "array")
 
     manager.add_link("constantarray0", "operation0", "out", "a")
-    manager.add_link("sine0", "operation0", "out", "b")
+    manager.add_link("oscillator0", "operation0", "out", "b")
     return manager
 
 
