@@ -1,7 +1,9 @@
 from typing import Any, Dict, Tuple
 
+import numpy as np
+
 from goofi.node import Node
-from goofi.params import FloatParam
+from goofi.params import BoolParam, FloatParam
 
 
 class EEGRecording(Node):
@@ -14,6 +16,8 @@ class EEGRecording(Node):
                 "file_sfreq": FloatParam(256, vmax=1000),
                 "source_name": "goofi",
                 "stream_name": "recording",
+                "loop": BoolParam(True, doc="Whether to loop the recording"),
+                "reset": BoolParam(trigger=True, doc="Restart the recording stream"),
             }
         }
 
@@ -69,6 +73,7 @@ class EEGRecording(Node):
             raw,
             name=self.params.recording.stream_name.value,
             source_id=self.params.recording.source_name.value,
+            n_repeat=np.inf if self.params.recording.loop.value else 1,
             annotations=False,
         )
         self.stream.start()
@@ -104,6 +109,15 @@ class EEGRecording(Node):
 
     def recording_stream_name_changed(self, _):
         """Reinitialize the stream."""
+        self.setup()
+
+    def recording_loop_changed(self, value: bool):
+        """Set the loop parameter of the stream."""
+        # ideally we wouldn't reset the stream, not sure if there is a way to change the n_repeat parameter on the fly
+        self.setup()
+
+    def recording_reset_changed(self, value: bool):
+        """Reset the stream if the reset parameter is triggered."""
         self.setup()
 
     def terminate(self):
