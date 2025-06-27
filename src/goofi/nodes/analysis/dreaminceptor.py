@@ -70,7 +70,12 @@ class DreamInceptor(Node):
         # Handle control parameters  
         if self.params.control.reset.value:  
             self.reset_state()  
-            return {"trigger": None}  
+            return {
+                "trigger": None,
+                "z_theta_alpha": None,
+                "z_lempel_ziv": None,
+                "baseline_stats": None
+            } 
   
         if self.params.control.start.value and not self.is_running:  
             self.is_running = True  
@@ -134,7 +139,7 @@ class DreamInceptor(Node):
             send_trigger = None
             if detected:
                 if (self.last_trigger_time is None) or ((now - self.last_trigger_time) >= wait_time):
-                    send_trigger = 1
+                    send_trigger = np.array(1), data.meta
                     self.last_trigger_time = now  # reset cooldown
                 else:
                     send_trigger = None  # within cooldown window
@@ -147,7 +152,7 @@ class DreamInceptor(Node):
             }  
             
             return {  
-                "trigger": (np.array([send_trigger]), data.meta),  
+                "trigger": send_trigger,  
                 "z_theta_alpha": (np.array([ta_zscore]), data.meta),  
                 "z_lempel_ziv": (np.array([lz_zscore]), data.meta),  
                 "baseline_stats": (baseline_stats_table, data.meta)  
