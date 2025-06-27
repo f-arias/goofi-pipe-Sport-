@@ -70,7 +70,7 @@ class DreamInceptor(Node):
         # Handle control parameters  
         if self.params.control.reset.value:  
             self.reset_state()  
-            return {"trigger": (np.array([0]), data.meta)}  
+            return {"trigger": None}  
   
         if self.params.control.start.value and not self.is_running:  
             self.is_running = True  
@@ -80,7 +80,7 @@ class DreamInceptor(Node):
   
         if not self.is_running:  
             return {
-                "trigger": (np.array([0]), data.meta),
+                "trigger": None,
                 "z_theta_alpha": None,
                 "z_lempel_ziv": None,
                 "baseline_stats": None
@@ -99,7 +99,7 @@ class DreamInceptor(Node):
                 # Still collecting baseline data  
                 self.baseline_data.extend(eeg_signal)  
                 return {
-                    "trigger": (np.array([0]), data.meta),
+                    "trigger": None,
                     "z_theta_alpha": None,
                     "z_lempel_ziv": None,
                     "baseline_stats": None,
@@ -131,13 +131,13 @@ class DreamInceptor(Node):
             # --- Trigger cooldown logic ---
             wait_time = self.params.control.wait_time.value
             now = time.time()
-            send_trigger = 0
+            send_trigger = None
             if detected:
                 if (self.last_trigger_time is None) or ((now - self.last_trigger_time) >= wait_time):
                     send_trigger = 1
                     self.last_trigger_time = now  # reset cooldown
                 else:
-                    send_trigger = 0  # within cooldown window
+                    send_trigger = None  # within cooldown window
             
             baseline_stats_table = {  
                 "lz_mean": Data(DataType.ARRAY, np.array([self.baseline_stats['lz']['mean']]), {}),  
