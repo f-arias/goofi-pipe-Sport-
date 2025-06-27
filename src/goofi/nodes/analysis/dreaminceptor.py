@@ -10,7 +10,7 @@ from goofi.params import BoolParam, FloatParam, IntParam, StringParam
 
 class DreamInceptor(Node):
     def config_input_slots():
-        return {"data": DataType.ARRAY}
+        return {"data": DataType.ARRAY, "start": DataType.ARRAY, "reset": DataType.ARRAY}
 
     def config_output_slots():
         return {
@@ -68,7 +68,14 @@ class DreamInceptor(Node):
         self.successive_count = 0
         self.time_origin = None
 
-    def process(self, data: Data):
+    def process(self, data: Data, start: Data = None, reset: Data = None):
+        if start is not None:
+            self.params.control.start.value = True
+            self.input_slots["start"].clear()
+        if reset is not None:
+            self.params.control.reset.value = True
+            self.input_slots["reset"].clear()
+
         if data is None or data.data is None:
             return None
 
