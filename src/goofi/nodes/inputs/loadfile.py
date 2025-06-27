@@ -16,7 +16,9 @@ class LoadFile(Node):
             "file": {
                 "filename": StringParam("earth", doc="The name of the file to load with extension"),
                 "type": StringParam(
-                    "spectrum", options=["spectrum", "time_series", "ndarray", "embedding_csv"], doc="Type of file to load"
+                    "spectrum",
+                    options=["spectrum", "time_series", "ndarray", "embedding_csv", "audio"],
+                    doc="Type of file to load",
                 ),
                 "freq_multiplier": FloatParam(1.0, doc="Multiplier to adjust the frequency values"),
                 "header": 0,
@@ -28,9 +30,11 @@ class LoadFile(Node):
         }
 
     def setup(self):
+        import librosa
         import pandas as pd
 
         self.pd = pd
+        self.librosa = librosa
 
         self.data_output = None
         self.string_output = None
@@ -55,6 +59,18 @@ class LoadFile(Node):
 
         file_type = self.params.file.type.value
         filename = self.params.file.filename.value
+
+        if file_type == "audio":
+            try:
+                audio, sr = self.librosa.load(f"{filename}", sr=None)
+                self.data_output = (audio.astype(np.float32), {"sfreq": sr})
+                self.string_output = None
+            except Exception as e:
+                print(f"Error loading audio file: {e}")
+                self.data_output = None
+                self.string_output = None
+            return
+
         extension = filename.split(".")[-1]
 
         df = None
@@ -89,7 +105,7 @@ class LoadFile(Node):
                     dtypes = list(df.dtypes)[slices[1]]
                     if not isinstance(dtypes, list):
                         dtypes = [dtypes]
-            except (ValueError, IndexError) as e:
+            except (ValueError, IndexError):
                 print(f"Invalid selection string: {selection}")
 
         if dtypes is not None and any([dtype == "object" for dtype in dtypes]):
