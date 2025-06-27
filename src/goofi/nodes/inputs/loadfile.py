@@ -8,6 +8,9 @@ from goofi.params import FloatParam, StringParam
 
 
 class LoadFile(Node):
+    def config_input_slots():
+        return {"file": DataType.STRING}
+
     def config_output_slots():
         return {"data_output": DataType.ARRAY, "string_output": DataType.STRING}
 
@@ -40,7 +43,12 @@ class LoadFile(Node):
         self.string_output = None
         self.last_params = None
 
-    def process(self):
+    def process(self, file):
+        if file is not None:
+            self.params.file.filename.value = file.data
+            self.file_filename_changed(file.data)
+            self.input_slots["file"].clear()
+
         if self.last_params == self.params.file:
             # if the parameters are the same, return the previous output
             return {"data_output": self.data_output, "string_output": self.string_output}
@@ -148,3 +156,15 @@ class LoadFile(Node):
             self.data_output = (data, meta if self.params.file.name_column.value else {})
             self.string_output = None
             return
+
+    def file_filename_changed(self, filename: str):
+        """Handle changes to the filename parameter."""
+        if not filename:
+            self.data_output = None
+            self.string_output = None
+            return
+
+        # Reset the output when the filename changes
+        self.data_output = None
+        self.string_output = None
+        self.load_file()
