@@ -7,7 +7,7 @@ from goofi.params import StringParam
 
 class AudioOut(Node):
     def config_input_slots():
-        return {"data": DataType.ARRAY}
+        return {"data": DataType.ARRAY, "device": DataType.STRING}
 
     def config_output_slots():
         return {"finished": DataType.ARRAY}
@@ -37,7 +37,12 @@ class AudioOut(Node):
 
         self.last_sample = None
 
-    def process(self, data: Data):
+    def process(self, data: Data, device: Data):
+        if device is not None:
+            self.params.audio.device.value = device.data
+            self.audio_device_changed(device.data)
+            self.input_slots["device"].clear()
+
         if data is None:
             return
 
