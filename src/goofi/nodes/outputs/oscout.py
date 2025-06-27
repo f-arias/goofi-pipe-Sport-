@@ -20,11 +20,13 @@ class OSCOut(Node):
                 "prefix": "/goofi",
                 "bundle": BoolParam(False, doc="Some software doesn't deal well with OSC bundles"),
                 "broadcast": BoolParam(False, doc="Enable broadcasting OSC messages"),
+                "require_change": BoolParam(False, doc="Only send OSC messages when the data changes"),
             }
         }
 
     def setup(self):
         self.sock = None
+        self.last_messages = {}
 
     def process(self, data: Data):
         if data is None or len(data.data) == 0:
@@ -44,6 +46,13 @@ class OSCOut(Node):
 
         # convert the data to a list of OSC messages
         messages = generate_messages(data, self.params.osc.prefix.value)
+
+        if self.params.osc.require_change.value and self.last_messages is not None:
+            messages = [
+                (addr, msg) for addr, msg in messages if addr not in self.last_messages or self.last_messages[addr] != msg
+            ]
+
+        self.last_messages.update(dict(messages))
 
         if self.params.osc.bundle.value:
             # send the data as an OSC bundle
