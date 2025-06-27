@@ -94,8 +94,9 @@ class DreamInceptor(Node):
             return {"trigger": None, "z_theta_alpha": None, "z_lempel_ziv": None, "baseline_stats": None}
 
         eeg_signal = np.asarray(data.data)
-
         assert eeg_signal.ndim == 1, "Expected 1d time series"
+
+        send_trigger = None
 
         # Phase 1: Baseline computation (first minute)
         if not self.baseline_computed:
@@ -114,6 +115,7 @@ class DreamInceptor(Node):
                 # Compute baseline statistics
                 self._compute_baseline_stats()
                 self.baseline_computed = True
+                send_trigger = np.array(0), data.meta # 0 means baseline finished
 
         # Phase 2: Feature extraction and detection
         if self.baseline_computed and len(self.baseline_data) > 0:
@@ -134,10 +136,9 @@ class DreamInceptor(Node):
             # --- Trigger cooldown logic ---
             wait_time = self.params.control.wait_time.value
             now = time.time()
-            send_trigger = None
             if detected:
                 if (self.last_trigger_time is None) or ((now - self.last_trigger_time) >= wait_time):
-                    send_trigger = np.array(1), data.meta
+                    send_trigger = np.array(1), data.meta # 1 means incubation triggered
                     self.last_trigger_time = now  # reset cooldown
                 else:
                     send_trigger = None  # within cooldown window
