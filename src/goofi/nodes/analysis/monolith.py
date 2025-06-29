@@ -1,20 +1,16 @@
 import tempfile
 
 import numpy as np
+
 from goofi.data import Data, DataType
 from goofi.node import Node
-from goofi.params import BoolParam
+from goofi.params import StringParam
 
 
 class Monolith(Node):
 
     def config_params():
-        return {
-            "monolith": {
-                "toto": BoolParam(False, doc="Whether to include Toto embedings"),
-                "pyspi": BoolParam(False, doc="Whether to compute SPI features"),
-            }
-        }
+        return {"monolith": {"ignore_features": StringParam("pyspi,toto", doc="Comma-separated list of features to ignore")}}
 
     def config_input_slots():
         return {"data": DataType.ARRAY}
@@ -30,35 +26,39 @@ class Monolith(Node):
         sfreq = data.meta["sfreq"]
         data_arr = data.data
 
-        feat_fns = FEAT_FNS.copy()
-        if not self.params.monolith.pyspi.value:
-            feat_fns.pop("spi", None)
-        if not self.params.monolith.toto.value:
-            feat_fns.pop("toto", None)
+        ignore_names = set(map(str.strip, self.params.monolith.ignore_features.value.split(",")))
 
         # Preprocess the data
         data_arr = preprocess(data_arr, sfreq)
 
-        # compute channel-wise features
         features = []
-        for feat_name, feat_fn in feat_fns.items():
-            if feat_name in NON_CHANNEL_WISE_FEATS:
-                ft = feat_fn(data_arr, sfreq)
+        # compute channel-wise features
+        for feat_name, feat_fn in CHANNELWISE_FEAT_FNS.items():
+            if feat_name in ignore_names:
+                continue
+
+            for channel_data in data_arr:
+                ft = feat_fn(channel_data, sfreq)
                 if isinstance(ft, np.ndarray) or isinstance(ft, list):
                     features.append(ft)
                 else:
                     features.append([ft])
+
+        # compute non channel-wise features
+        for feat_name, feat_fn in NON_CHANNEL_WISE_FEAT_FNS.items():
+            if feat_name in ignore_names:
+                continue
+
+            ft = feat_fn(data_arr, sfreq)
+            if isinstance(ft, np.ndarray) or isinstance(ft, list):
+                features.append(ft)
             else:
-                for channel_data in data_arr:
-                    ft = feat_fn(channel_data, sfreq)
-                    if isinstance(ft, np.ndarray) or isinstance(ft, list):
-                        features.append(ft)
-                    else:
-                        features.append([ft])
+                features.append([ft])
 
         features = np.concatenate(features, axis=-1)
         meta = data.meta.copy()
         del meta["channels"]
+
         return {"features": (features, meta)}
 
 
@@ -121,11 +121,11 @@ def spectral(x, sfreq):
 
     f, Pxx = welch(x, sfreq)
     mean_frequency = np.sum(f * Pxx) / np.sum(Pxx)
-    delta = np.trapezoid(Pxx[(f >= 0) & (f <= 4)], f[(f >= 0) & (f <= 4)])
-    theta = np.trapezoid(Pxx[(f > 4) & (f <= 8)], f[(f > 4) & (f <= 8)])
-    alpha = np.trapezoid(Pxx[(f > 8) & (f <= 12)], f[(f > 8) & (f <= 12)])
-    beta = np.trapezoid(Pxx[(f > 12) & (f <= 30)], f[(f > 12) & (f <= 30)])
-    gamma = np.trapezoid(Pxx[(f > 30) & (f <= 45)], f[(f > 30) & (f <= 45)])
+    delta = np.trapz(Pxx[(f >= 0) & (f <= 4)], f[(f >= 0) & (f <= 4)])
+    theta = np.trapz(Pxx[(f > 4) & (f <= 8)], f[(f > 4) & (f <= 8)])
+    alpha = np.trapz(Pxx[(f > 8) & (f <= 12)], f[(f > 8) & (f <= 12)])
+    beta = np.trapz(Pxx[(f > 12) & (f <= 30)], f[(f > 12) & (f <= 30)])
+    gamma = np.trapz(Pxx[(f > 30) & (f <= 45)], f[(f > 30) & (f <= 45)])
 
     from fooof import FOOOF
 
@@ -264,7 +264,7 @@ def compute_spi_features(data, subset="fast"):
     return s.values
 
 
-def phiid_pairwise_metrics(x, sfreq):
+def phiid_pairwise_metrics(x, sfreq, tau=5, kind="gaussian", redundancy="MMI"):
     """
     Compute all PhiID atom metrics for all pairs of channels (asymmetric, src->tgt and tgt->src).
     Returns a flattened array of all atom means for each channel pair and direction.
@@ -273,9 +273,7 @@ def phiid_pairwise_metrics(x, sfreq):
 
     data = np.atleast_2d(x)
     n_channels, n_time = data.shape
-    tau = 5
-    kind = "gaussian"
-    redundancy = "MMI"
+
     atom_names = [
         "rtr",
         "rtx",
@@ -314,7 +312,7 @@ def compute_toto_embedding(x, sfreq):
     return embed_toto(x, global_average=True)
 
 
-FEAT_FNS = {
+CHANNELWISE_FEAT_FNS = {
     "detrended_fluctuation": compute_detrended_fluctuation,
     "higuchi_fd": compute_higuchi_fd,
     "lziv_complexity": compute_lziv_complexity,
@@ -327,25 +325,20 @@ FEAT_FNS = {
     "spectral": spectral,
     "entropy_shannon": entropy_shannon,
     "entropy_renyi": entropy_renyi,
-    # "entropy_approximate": entropy_approximate,
-    # "entropy_sample": entropy_sample,
     "entropy_rate": entropy_rate,
-    # "entropy_permutation": entropy_permutation,
-    # "entropy_permutation_weighted": entropy_permutation_weighted,
-    # "entropy_permutation_conditional": entropy_permutation_conditional,
-    # "entropy_permutation_weighted_conditional": entropy_permutation_weighted_conditional,
-    # "entropy_multiscale": entropy_multiscale,
     "entropy_bubble": entropy_bubble,
     "entropy_svd": entropy_svd,
     "entropy_attention": entropy_attention,
     "entropy_dispersion": entropy_dispersion,
-    "spi": compute_spi_features,
+}
+
+NON_CHANNEL_WISE_FEAT_FNS = {
+    "pyspi": compute_spi_features,
     "phiid": phiid_pairwise_metrics,
     "toto": compute_toto_embedding,
 }
 
-BATCHED_FEATS = ["toto"]
-NON_CHANNEL_WISE_FEATS = ["spi", "phiid", "toto"]
+BATCHABLE_FEATS = ["toto"]
 
 PYSPI_FAST_CONFIG = """
 .statistics.basic:
