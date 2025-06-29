@@ -101,10 +101,12 @@ class Node(ABC):
 
         self._validate_attrs(environment)
 
-        # initialize node flags
-        self.process_flag = Event()
-        if self.params.common.autotrigger.value:
-            self.process_flag.set()
+        # NOTE: we avoid creating a threading.Event() in standalone mode to ensure nodes can be pickled
+        if environment != NodeEnv.STANDALONE:
+            # initialize node flags
+            self.process_flag = Event()
+            if self.params.common.autotrigger.value:
+                self.process_flag.set()
 
         # set up dict of possibly timed out output connections
         self.pending_connections = {}
