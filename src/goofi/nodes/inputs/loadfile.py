@@ -17,18 +17,16 @@ class LoadFile(Node):
     def config_params():
         return {
             "file": {
-                "filename": StringParam("earth", doc="The name of the file to load with extension"),
+                "filename": StringParam("", doc="The name of the file to load with extension"),
                 "type": StringParam(
                     "spectrum",
                     options=["spectrum", "time_series", "ndarray", "embedding_csv", "audio"],
                     doc="Type of file to load",
                 ),
-                "freq_multiplier": FloatParam(1.0, doc="Multiplier to adjust the frequency values"),
-                "header": 0,
-                "index_column": True,
-                "name_column": False,
                 "select": StringParam("", doc="NumPy selection string"),
             },
+            "spectrum": {"freq_multiplier": FloatParam(1.0, doc="Multiplier to adjust the frequency values")},
+            "embedding_csv": {"header": 0, "name_column": False, "index_column": True},
             "common": {"autotrigger": True, "max_frequency": 1.0},
         }
 
@@ -49,18 +47,18 @@ class LoadFile(Node):
             self.file_filename_changed(file.data)
             self.input_slots["file"].clear()
 
-        if self.last_params == self.params.file:
+        if self.last_params == self.params and not (self.data_output is None and self.string_output is None):
             # if the parameters are the same, return the previous output
             return {"data_output": self.data_output, "string_output": self.string_output}
 
         # if the parameters are different, load the file
-        self.last_params = deepcopy(self.params.file)
+        self.last_params = deepcopy(self.params)
         self.load_file()
 
         return {"data_output": self.data_output, "string_output": self.string_output}
 
     def load_file(self):
-        if self.params.file.filename.value is None:
+        if not self.params.file.filename.value:
             self.data_output = None
             self.string_output = None
             return
@@ -89,10 +87,14 @@ class LoadFile(Node):
         elif extension == "csv":
             df = self.pd.read_csv(
                 f"{filename}",
-                header=self.params.file.header.value,
-                index_col=0 if self.params.file.index_column.value else None,
+                header=self.params.embedding_csv.header.value,
+                index_col=0 if self.params.embedding_csv.index_column.value else None,
             )
             data = df.values
+
+            if self.params.embedding_csv.name_column.value:
+                meta = {"channels": {"dim0": list(df.iloc[:, 0].values)}}
+                data = data[:, 1:]
 
         # apply selection
         selection = self.params.file.select.value
@@ -109,7 +111,7 @@ class LoadFile(Node):
                     for dim in selection.split(",")
                 )
                 data = data[slices]
-                if df is not None:
+                if df is not None and len(slices) > 1:
                     dtypes = list(df.dtypes)[slices[1]]
                     if not isinstance(dtypes, list):
                         dtypes = [dtypes]
@@ -120,10 +122,6 @@ class LoadFile(Node):
             self.data_output = None
             self.string_output = ("\n".join(data), {})
             return
-
-        if self.params.file.name_column.value:
-            meta = {"channels": {"dim0": list(df.iloc[:, 0].values)}}
-            data = data[:, 1:]
 
         data = data.astype(np.float32)
 
@@ -139,7 +137,7 @@ class LoadFile(Node):
 
         # Handle spectrum type
         elif file_type == "spectrum":
-            freq_multiplier = self.params["file"]["freq_multiplier"].value
+            freq_multiplier = self.params.spectrum.freq_multiplier.value
             freq_vector = data[0] * freq_multiplier  # Multiply the frequency values
             spectrums = data[1]
 
@@ -153,18 +151,6 @@ class LoadFile(Node):
             return
 
         elif file_type == "embedding_csv":
-            self.data_output = (data, meta if self.params.file.name_column.value else {})
+            self.data_output = (data, meta if self.params.embedding_csv.name_column.value else {})
             self.string_output = None
             return
-
-    def file_filename_changed(self, filename: str):
-        """Handle changes to the filename parameter."""
-        if not filename:
-            self.data_output = None
-            self.string_output = None
-            return
-
-        # Reset the output when the filename changes
-        self.data_output = None
-        self.string_output = None
-        self.load_file()
