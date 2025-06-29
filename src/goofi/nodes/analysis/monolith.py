@@ -73,8 +73,8 @@ def preprocess(data: np.ndarray, sfreq: float):
     b, a = butter(4, [low_cut, high_cut], btype="band")
     data = filtfilt(b, a, data, axis=-1)
 
-    # Apply notch filters for 50Hz and harmonics
-    for freq in np.arange(50, 101, 50):
+    # Apply notch filters at 50Hz and 60Hz
+    for freq in np.concatenate([np.arange(50, 101, 50), np.arange(60, 121, 60)]):
         if freq < nyquist:
             b, a = iirnotch(freq, Q=30, fs=sfreq)
             data = filtfilt(b, a, data, axis=-1)
