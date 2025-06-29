@@ -17,13 +17,16 @@ class DimensionalityReduction(Node):
 
     def config_params():
         return {
-            "Control": {
+            "dim_red": {
                 "reset": BoolParam(False, trigger=True, doc="Reset the buffer"),
                 "method": StringParam("PCA", options=["PCA", "t-SNE", "UMAP"], doc="Dimensionality reduction method"),
                 "n_components": IntParam(2, 1, 10, doc="Number of output dimensions"),
-                "tsne_perplexity": FloatParam(30.0, 5.0, 50.0, doc="t-SNE perplexity"),
-                "umap_neighbors": FloatParam(15, 2, 100, doc="Number of UMAP neighbors"),
-            }
+            },
+            "umap": {
+                "num_neighbors": IntParam(15, 2, 100, doc="Number of UMAP neighbors"),
+                "metric": StringParam("euclidean", options=UMAP_METRICS, doc="Distance metric for UMAP"),
+            },
+            "tsne": {"perplexity": FloatParam(30.0, 5.0, 50.0, doc="t-SNE perplexity")},
         }
 
     def setup(self):
@@ -43,10 +46,10 @@ class DimensionalityReduction(Node):
         if data is None:
             return None
 
-        method = self.params.Control.method.value
+        method = self.params.dim_red.method.value
         data_array = np.squeeze(data.data)
 
-        if self.params.Control.reset.value:
+        if self.params.dim_red.reset.value:
             self.model = None
             self.components = None
             self.meta = None
@@ -74,9 +77,7 @@ class DimensionalityReduction(Node):
         if data_array.ndim != 2:
             raise ValueError("Data must be 2D")
 
-        n_components = int(self.params.Control.n_components.value)
-        perplexity = self.params.Control.tsne_perplexity.value
-        n_neighbors = int(self.params.Control.umap_neighbors.value)
+        n_components = int(self.params.dim_red.n_components.value)
 
         self.meta = data.meta
         if "channels" in self.meta and "dim1" in self.meta["channels"]:
@@ -94,12 +95,21 @@ class DimensionalityReduction(Node):
                     del new_meta["channels"]["dim1"]
 
         elif method == "t-SNE":
-            self.model = self.tsne_cls(n_components=n_components, perplexity=perplexity, init="pca", random_state=42)
+            self.model = self.tsne_cls(
+                n_components=n_components,
+                perplexity=self.params.tsne.perplexity.value,
+                init="pca",
+                random_state=42,
+            )
             self.components = self.model.fit_transform(data_array)
 
         elif method == "UMAP":
-            # Initialize UMAP model
-            self.model = self.umap_cls(n_neighbors=n_neighbors, n_components=n_components, random_state=42)
+            self.model = self.umap_cls(
+                n_components=n_components,
+                n_neighbors=self.params.umap.num_neighbors.value,
+                metric=self.params.umap.metric.value,
+                random_state=42,
+            )
             self.components = self.model.fit_transform(data_array)
 
             if new_data is not None:
@@ -116,3 +126,30 @@ class DimensionalityReduction(Node):
             "transformed": (self.components, self.meta),
             "new_components": (new_components, self.meta) if new_components is not None else None,
         }
+
+
+UMAP_METRICS = [
+    "euclidean",
+    "manhattan",
+    "chebyshev",
+    "minkowski",
+    "canberra",
+    "braycurtis",
+    "mahalanobis",
+    "wminkowski",
+    "seuclidean",
+    "cosine",
+    "correlation",
+    "haversine",
+    "hamming",
+    "jaccard",
+    "dice",
+    "russelrao",
+    "kulsinski",
+    "ll_dirichlet",
+    "hellinger",
+    "rogerstanimoto",
+    "sokalmichener",
+    "sokalsneath",
+    "yule",
+]
