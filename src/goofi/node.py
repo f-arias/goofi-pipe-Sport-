@@ -429,7 +429,9 @@ class Node(ABC):
                     if conn._id in self.pending_connections:
                         # filter out dead threads
                         self.pending_connections[conn._id] = [
-                            (thread, timestamp) for thread, timestamp in self.pending_connections[conn._id] if thread.is_alive()
+                            (thread, timestamp)
+                            for thread, timestamp in self.pending_connections[conn._id]
+                            if thread.is_alive()
                         ]
                         # check if the connection has timed out
                         timeout_occurred = False
