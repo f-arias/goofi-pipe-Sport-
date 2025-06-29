@@ -108,10 +108,6 @@ def kurt(x, sfreq):
     return kurtosis(x)
 
 
-def zero_crossings(x, sfreq):
-    return ((x[:-1] * x[1:]) < 0).sum()
-
-
 def hjorth_activity(x, sfreq):
     return np.var(x)
 
@@ -333,7 +329,6 @@ FEAT_FNS = {
     "std_amplitude": std_amplitude,
     "skewness": skewness,
     "kurtosis": kurt,
-    "zero_crossings": zero_crossings,
     "hjorth_activity": hjorth_activity,
     "hjorth_mobility": hjorth_mobility,
     "hjorth_complexity": hjorth_complexity,
