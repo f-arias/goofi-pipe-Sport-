@@ -1,7 +1,6 @@
 import tempfile
 
 import numpy as np
-
 from goofi.data import Data, DataType
 from goofi.node import Node
 from goofi.params import BoolParam
@@ -66,12 +65,17 @@ class Monolith(Node):
 def preprocess(data: np.ndarray, sfreq: float):
     from scipy.signal import butter, filtfilt, iirnotch
 
-    # Apply bandpass filter (3-30 Hz)
+    # Apply bandpass filter (3-40 Hz)
     nyquist = sfreq / 2
-    low_cut = 3 / nyquist
-    high_cut = 30 / nyquist
-    b, a = butter(4, [low_cut, high_cut], btype="band")
-    data = filtfilt(b, a, data, axis=-1)
+
+    def bandpass_filter(data, low_freq, high_freq, sfreq, order=4):
+        nyq = sfreq / 2
+        low = low_freq / nyq
+        high = high_freq / nyq
+        b, a = butter(order, [low, high], btype="band")
+        return filtfilt(b, a, data, axis=-1)
+
+    data = bandpass_filter(data, low_freq=3, high_freq=40, sfreq=sfreq)
 
     # Apply notch filters at 50Hz and 60Hz
     for freq in np.concatenate([np.arange(50, 101, 50), np.arange(60, 121, 60)]):
@@ -81,19 +85,9 @@ def preprocess(data: np.ndarray, sfreq: float):
 
     # Clip values
     data = np.clip(data, -150, 150)
-
     # Standardize per channel
     data = (data - np.mean(data, axis=-1, keepdims=True)) / np.std(data, axis=-1, keepdims=True)
-
     return data
-
-
-def mean_amplitude(x, sfreq):
-    return np.mean(x)
-
-
-def std_amplitude(x, sfreq):
-    return np.std(x)
 
 
 def skewness(x, sfreq):
@@ -325,8 +319,6 @@ FEAT_FNS = {
     "higuchi_fd": compute_higuchi_fd,
     "lziv_complexity": compute_lziv_complexity,
     "petrosian_fd": compute_petrosian_fd,
-    "mean_amplitude": mean_amplitude,
-    "std_amplitude": std_amplitude,
     "skewness": skewness,
     "kurtosis": kurt,
     "hjorth_activity": hjorth_activity,
