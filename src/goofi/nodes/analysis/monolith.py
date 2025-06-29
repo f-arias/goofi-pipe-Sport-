@@ -4,13 +4,18 @@ import numpy as np
 
 from goofi.data import Data, DataType
 from goofi.node import Node
-from goofi.params import StringParam
+from goofi.params import FloatParam, StringParam
 
 
 class Monolith(Node):
 
     def config_params():
-        return {"monolith": {"ignore_features": StringParam("pyspi,toto", doc="Comma-separated list of features to ignore")}}
+        return {
+            "monolith": {
+                "ignore_features": StringParam("pyspi,toto", doc="Comma-separated list of features to ignore"),
+                "clip_value": FloatParam(75, 1, 200, doc="Clip values to this range during preprocessing"),
+            }
+        }
 
     def config_input_slots():
         return {"data": DataType.ARRAY}
@@ -29,7 +34,7 @@ class Monolith(Node):
         ignore_names = set(map(str.strip, self.params.monolith.ignore_features.value.split(",")))
 
         # Preprocess the data
-        data_arr = preprocess(data_arr, sfreq)
+        data_arr = preprocess(data_arr, sfreq, clip_value=self.params.monolith.clip_value.value)
 
         features = []
         # compute channel-wise features
@@ -62,31 +67,50 @@ class Monolith(Node):
         return {"features": (features, meta)}
 
 
-def preprocess(data: np.ndarray, sfreq: float):
-    from scipy.signal import butter, filtfilt, iirnotch
+def _bandpass_filter(x, sfreq, l_freq, h_freq, order=5):
+    from scipy.signal import butter, sosfiltfilt
 
-    # Apply bandpass filter (3-40 Hz)
-    nyquist = sfreq / 2
+    nyq = 0.5 * sfreq
+    low = l_freq / nyq
+    high = h_freq / nyq
+    sos = butter(order, [low, high], btype="band", output="sos")
+    return sosfiltfilt(sos, x, axis=-1)
 
-    def bandpass_filter(data, low_freq, high_freq, sfreq, order=4):
-        nyq = sfreq / 2
-        low = low_freq / nyq
-        high = high_freq / nyq
-        b, a = butter(order, [low, high], btype="band")
-        return filtfilt(b, a, data, axis=-1)
 
-    data = bandpass_filter(data, low_freq=3, high_freq=40, sfreq=sfreq)
+def _notch_filter(x, sfreq, freqs=[50, 60], Q=30):
+    from scipy.signal import iirnotch, sosfiltfilt
 
-    # Apply notch filters at 50Hz and 60Hz
-    for freq in np.concatenate([np.arange(50, 101, 50), np.arange(60, 121, 60)]):
-        if freq < nyquist:
-            b, a = iirnotch(freq, Q=30, fs=sfreq)
-            data = filtfilt(b, a, data, axis=-1)
+    nyq = sfreq / 2
+    sos_list = []
+    for base_freq in freqs:
+        n = 1
+        while True:
+            f = base_freq * n
+            if f >= nyq:
+                break
+            # iirnotch returns (b, a); convert to SOS
+            b, a = iirnotch(f, Q, sfreq)
+            from scipy.signal import tf2sos
 
-    # Clip values
-    data = np.clip(data, -150, 150)
-    # Standardize per channel
-    data = (data - np.mean(data, axis=-1, keepdims=True)) / np.std(data, axis=-1, keepdims=True)
+            sos = tf2sos(b, a)
+            sos_list.append(sos)
+            n += 1
+    # Concatenate all SOS
+    sos_all = np.concatenate(sos_list, axis=0)
+    return sosfiltfilt(sos_all, x, axis=-1)
+
+
+def preprocess(data: np.ndarray, sfreq: float, clip_value: float = 75):
+    # bandpass filter the data
+    data = _bandpass_filter(data, sfreq, l_freq=3, h_freq=30)
+    # apply notch filters at 50Hz and 60Hz
+    data = _notch_filter(data, sfreq, freqs=[50, 60])
+    # remove DC offset
+    data = data - np.mean(data, axis=-1, keepdims=True)
+    # clip values
+    data = np.clip(data, -clip_value, clip_value)
+    # standardize
+    data = (data - np.mean(data)) / np.std(data)
     return data
 
 
