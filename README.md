@@ -389,6 +389,19 @@ Nodes that perform analysis on the data.
     - avg_dissonance: ARRAY
   </details>
 
+<details><summary>&emsp;DreamInceptor</summary>
+
+  - **Inputs:**
+    - data: ARRAY
+    - start: ARRAY
+    - reset: ARRAY
+  - **Outputs:**
+    - trigger: ARRAY
+    - z_theta_alpha: ARRAY
+    - z_lempel_ziv: ARRAY
+    - baseline_stats: TABLE
+  </details>
+
 <details><summary>&emsp;EEGEmbedding</summary>
 
   - **Inputs:**
@@ -480,6 +493,14 @@ Nodes that perform analysis on the data.
     - data: ARRAY
   - **Outputs:**
     - lzc: ARRAY
+  </details>
+
+<details><summary>&emsp;Monolith</summary>
+
+  - **Inputs:**
+    - data: ARRAY
+  - **Outputs:**
+    - features: ARRAY
   </details>
 
 <details><summary>&emsp;PCA</summary>
@@ -655,6 +676,14 @@ Nodes implementing array operations.
     - out: ARRAY
   </details>
 
+<details><summary>&emsp;Function</summary>
+
+  - **Inputs:**
+    - array: ARRAY
+  - **Outputs:**
+    - out: ARRAY
+  </details>
+
 <details><summary>&emsp;Join</summary>
 
   - **Inputs:**
@@ -813,6 +842,7 @@ Nodes that provide data to the pipeline.
 <details><summary>&emsp;LoadFile</summary>
 
   - **Inputs:**
+    - file: STRING
   - **Outputs:**
     - data_output: ARRAY
     - string_output: STRING
@@ -835,6 +865,14 @@ Nodes that provide data to the pipeline.
     - location_name: STRING
   - **Outputs:**
     - weather_data_table: TABLE
+  </details>
+
+<details><summary>&emsp;Oscillator</summary>
+
+  - **Inputs:**
+    - frequency: ARRAY
+  - **Outputs:**
+    - out: ARRAY
   </details>
 
 <details><summary>&emsp;OSCIn</summary>
@@ -890,14 +928,6 @@ Nodes that provide data to the pipeline.
     - peak_amplitudes: ARRAY
   - **Outputs:**
     - eeg_signal: ARRAY
-  </details>
-
-<details><summary>&emsp;Sine</summary>
-
-  - **Inputs:**
-    - frequency: ARRAY
-  - **Outputs:**
-    - out: ARRAY
   </details>
 
 <details><summary>&emsp;SpikingNetwork</summary>
@@ -963,6 +993,15 @@ Miscellaneous nodes that do not fit into other categories.
     - table2: TABLE
   - **Outputs:**
     - output_table: TABLE
+  </details>
+
+<details><summary>&emsp;ArrayAwait</summary>
+
+  - **Inputs:**
+    - data: ARRAY
+    - trigger: ARRAY
+  - **Outputs:**
+    - out: ARRAY
   </details>
 
 <details><summary>&emsp;ColorEnhancer</summary>
@@ -1111,6 +1150,7 @@ Nodes that send data to external systems.
 
   - **Inputs:**
     - data: ARRAY
+    - device: STRING
   - **Outputs:**
     - finished: ARRAY
   </details>
@@ -1182,6 +1222,14 @@ Nodes that send data to external systems.
 Nodes implementing signal processing operations.
 
 <details><summary>View Nodes</summary>
+
+<details><summary>&emsp;Autocorrelation</summary>
+
+  - **Inputs:**
+    - signal: ARRAY
+  - **Outputs:**
+    - autocorr: ARRAY
+  </details>
 
 <details><summary>&emsp;Buffer</summary>
 
