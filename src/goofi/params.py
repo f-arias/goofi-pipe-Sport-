@@ -145,6 +145,14 @@ DEFAULT_PARAMS = {
         "max_frequency": FloatParam(
             30.0, 0.0, 60.0, doc="The maximum frequency at which the node will run its processing function."
         ),
+        "frequency_mode": StringParam(
+            "updates-per-second",
+            options=["updates-per-second", "seconds-per-update"],
+            doc=(
+                "The frequency mode of the node. If 'updates-per-second', the node will run at the specified Max Frequency.\n"
+                "If 'seconds-per-update', the node will run once every specified number of seconds."
+            ),
+        ),
     },
 }
 

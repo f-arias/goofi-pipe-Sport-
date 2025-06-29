@@ -349,7 +349,11 @@ class Node(ABC):
 
             # limit the update rate
             if self.params.common.max_frequency.value > 0:
-                sleep_time = 1 / self.params.common.max_frequency.value - (time.time() - last_update)
+                max_freq = self.params.common.max_frequency.value
+                if self.params.common.frequency_mode.value == "updates-per-second":
+                    # convert frequency to seconds per update
+                    max_freq = 1 / max_freq
+                sleep_time = max_freq - (time.time() - last_update)
                 if sleep_time > 0:
                     time.sleep(sleep_time)
                 last_update = time.time()
