@@ -128,7 +128,7 @@ class Data:
                 raise ValueError(f"Expected table values of type Data, got {type(value)}.")
 
 
-def to_data(obj: Any, meta: Optional[Dict[str, Any]] = None):
+def to_data(obj: Any, meta: Optional[Dict[str, Any]] = None, **kwargs) -> Data:
     """
     Convert an object to a Data object. The data type of the Data object is determined by the type of the object.
     The object must be of a supported type (i.e. numpy array, string, or dict).
@@ -138,14 +138,19 @@ def to_data(obj: Any, meta: Optional[Dict[str, Any]] = None):
         The object to convert to a Data object.
     `meta` : Dict[str, Any], optional
         The metadata dictionary.
+    `**kwargs` : Any
+        Additional keyword arguments that are added to the metadata dictionary.
 
     ### Returns
     Data
         The converted Data object.
     """
+    meta = meta or {}
+    meta.update(kwargs)
+
     for dtype, types in DTYPE_TO_TYPE.items():
         if isinstance(obj, types):
-            return Data(dtype=dtype, data=obj, meta=meta or {})
+            return Data(dtype=dtype, data=obj, meta=meta)
     raise ValueError(f"Could not parse goofi dtype for object of type {type(obj)}.")
 
 
