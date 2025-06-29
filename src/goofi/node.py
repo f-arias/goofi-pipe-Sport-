@@ -115,11 +115,11 @@ class Node(ABC):
             self.processing_thread.start()
 
         if environment == NodeEnv.MULTIPROCESSING:
-            # this is a separate process, run the messaging loop in the current thread
+            # we are in a node-specific process, run the messaging loop in the current thread
             # NOTE: if we don't block the current thread, the node's process will die
             self._messaging_loop()
         elif environment == NodeEnv.LOCAL:
-            # this is the main process, create a new thread to not block it
+            # we are in the main process, create a new thread to not block it
             self.messaging_thread = Thread(target=self._messaging_loop, daemon=True)
             self.messaging_thread.start()
         elif environment == NodeEnv.STANDALONE:
